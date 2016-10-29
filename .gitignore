@@ -1,0 +1,8 @@
+src/ThirdParty/*
+*.csproj
+*.user
+*.suo
+_ReSharper.*
+bin
+obj
+packages
