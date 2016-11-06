@@ -85,7 +85,7 @@ namespace Bagify
         public override bool OnPickup(Item item, Player player)
         {
             //If it's not normal difficulty
-            if (player.difficulty != 0)
+            if (player.difficulty != 0 && Storage.InventoryCache.Any())
             {
                 var items = Storage.InventoryCache.ToList();
 
@@ -96,6 +96,10 @@ namespace Bagify
                 {
                     //Saves the item in the current position
                     var existing = player.inventory[current.Index];
+
+                    //Remove from the list
+                    items.Remove(current);
+                    Storage.InventoryCache = items;
 
                     if (current.Type != InventoryType.Inventory)
                     {
@@ -119,15 +123,10 @@ namespace Bagify
                     var emptyIndex = player.inventory.ToList().IndexOf(player.inventory.Where(x => x.netID == 0).FirstOrDefault());
 
                     //Place the previous item in any empty slot
-                    player.inventory[emptyIndex] = existing;
-
-                    //Remove from the list
-                    items.Remove(current);
-                    Storage.InventoryCache = items;
-                }                
-
-                //Return false here to prevent duplicate
-                return current == null;
+                    player.inventory[emptyIndex] = existing;                    
+                    
+                    return !(player.inventory.Select(x => x.netID).Contains(item.netID) && !items.Select(x => x.NetId).Contains(item.netID));
+                }
             }
 
             return true;
@@ -152,7 +151,11 @@ namespace Bagify
                     return new InventoryItem(x.netID, index, InventoryType.Armor);
                 });
 
-                currentCachedInventory.AddRange(armors);
+                foreach(var armor in armors)
+                {
+                    if(!currentCachedInventory.Any(x => x == armors))
+                        currentCachedInventory.Add(armor);
+                }                
 
                 //Select every current using dye
                 var dyes = Main.player[Main.myPlayer].dye.Select(x =>
@@ -161,7 +164,11 @@ namespace Bagify
                     return new InventoryItem(x.netID, index, InventoryType.Dye);
                 });
 
-                currentCachedInventory.AddRange(dyes);
+                foreach (var dye in dyes)
+                {
+                    if (!currentCachedInventory.Any(x => x == dyes))
+                        currentCachedInventory.Add(dye);
+                }
 
                 //Select every current item on inventory
                 var inventory = Main.player[Main.myPlayer].inventory.Select(x =>
@@ -170,7 +177,11 @@ namespace Bagify
                     return new InventoryItem(x.netID, index, InventoryType.Inventory);
                 });
 
-                currentCachedInventory.AddRange(inventory);
+                foreach (var item in inventory)
+                {
+                    if (!currentCachedInventory.Any(x => x == inventory))
+                        currentCachedInventory.Add(item);
+                }
 
                 //Recache
                 Storage.InventoryCache = currentCachedInventory;
